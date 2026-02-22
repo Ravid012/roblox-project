@@ -1,39 +1,61 @@
-// --- 1. THE SAVING MECHANISM (On Login Success) ---
-function onLoginSuccess(apiResponse) {
-    // The server sends back a 'token' (your digital ID card)
-    const sessionToken = apiResponse.token;
-
-    // We store it in LocalStorage so it survives a browser restart
-    localStorage.setItem('game_auth_token', sessionToken);
-    
-    console.log("Session persisted to local storage.");
-}
-
-// --- 2. THE LOADING MECHANISM (On Page Refresh) ---
-function initGameSession() {
-    // When the player hits 'Refresh' or returns the next day:
-    const savedToken = localStorage.getItem('game_auth_token');
-
-    if (savedToken) {
-        // We found a key! Now we ask the server if it's still valid.
-        validateTokenWithServer(savedToken);
-    } else {
-        // No key found. Redirect to the login screen.
-        showLoginOverlay();
+<style>
+    #cookie-banner {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        background-color: #333;
+        color: #fff;
+        padding: 20px;
+        display: none; /* מוסתר כברירת מחדל */
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        z-index: 9999;
+        font-family: sans-serif;
+        direction: rtl;
     }
-}
+    #cookie-banner button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 5px;
+        font-weight: bold;
+        margin-right: 15px;
+    }
+    #cookie-banner button:hover {
+        background-color: #45a049;
+    }
+    #cookie-banner a {
+        color: #add8e6;
+        text-decoration: underline;
+    }
+</style>
 
-// --- 3. THE DATA FLOW (Sending the Key) ---
-function performGameAction(actionType) {
-    const token = localStorage.getItem('game_auth_token');
+<div id="cookie-banner">
+    <span>
+        אנו משתמשים בעוגיות כדי לשפר את החוויה שלך. בהמשך הגלישה אתה מסכים ל-<a href="privacy-policy.html">מדיניות הפרטיות</a> שלנו.
+    </span>
+    <button onclick="acceptCookies()">אני מאשר/ת</button>
+</div>
 
-    // Every time you click 'Attack' or 'Trade', the token goes with it
-    fetch('/api/game/action', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ action: actionType })
-    });
-}
+<script>
+    // פונקציה לבדיקה האם המשתמש כבר אישר בעבר
+    window.onload = function() {
+        if (!localStorage.getItem('cookiesAccepted')) {
+            document.getElementById('cookie-banner').style.display = 'flex';
+        }
+    };
+
+    // פונקציה לשמירת האישור והסתרת הבאנר
+    function acceptCookies() {
+        localStorage.setItem('cookiesAccepted', 'true');
+        document.getElementById('cookie-banner').style.display = 'none';
+        
+        // כאן אפשר להוסיף קוד להפעלת Google Analytics וכדומה
+        console.log("Cookies accepted by user.");
+    }
+</script>
